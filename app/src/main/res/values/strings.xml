@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Recipe Manager</string>
+    <string name="tab_recipes">Recipes</string>
+    <string name="tab_mealplan">Meal Plan</string>
+    <string name="tab_shopping">Shopping</string>
+    <string name="tab_profile">Profile</string>
+    <string name="login_subtitle">Sign in to continue</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="or">or</string>
+    <string name="no_account">Don\'t have an account?</string>
+    <string name="register">Register</string>
+    <string name="create_account">Create Account</string>
+    <string name="name">Name</string>
+    <string name="default_web_client_id">TU_WEB_CLIENT_ID</string>
+</resources>
