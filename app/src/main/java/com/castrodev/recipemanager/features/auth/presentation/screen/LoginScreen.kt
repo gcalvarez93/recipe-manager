@@ -96,7 +96,7 @@ fun LoginScreen(
             Spacer(Modifier.height(16.dp))
             GoogleSignInButton(onClick = {
                 val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken(context.getString(R.string.default_web_client_id))
+                    .requestIdToken("647694841688-5u9b89na24jnnpav7o1cfecqlfqn4t2p.apps.googleusercontent.com")
                     .requestEmail().build()
                 googleLauncher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
             })

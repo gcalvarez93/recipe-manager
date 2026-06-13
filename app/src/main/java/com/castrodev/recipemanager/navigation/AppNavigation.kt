@@ -14,7 +14,7 @@ import com.castrodev.recipemanager.features.auth.presentation.viewmodel.AuthView
 
 @Composable
 fun AppNavigation() {
-    val navController  = rememberNavController()
+    val navController   = rememberNavController()
     val authViewModel: AuthViewModel = viewModel()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
@@ -23,7 +23,7 @@ fun AppNavigation() {
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Login.route) {
             LoginScreen(
-                viewModel          = authViewModel,
+                viewModel            = authViewModel,
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) },
                 onLoginSuccess       = {
                     navController.navigate(Screen.Main.route) {
@@ -34,18 +34,19 @@ fun AppNavigation() {
         }
         composable(Screen.Register.route) {
             RegisterScreen(
-                viewModel       = authViewModel,
+                viewModel         = authViewModel,
                 onRegisterSuccess = {
                     navController.navigate(Screen.Main.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                onNavigateBack  = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(Screen.Main.route) {
             MainScreen(
                 onLogout = {
+                    authViewModel.signOut()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
