@@ -51,7 +51,9 @@ class ShoppingViewModel : ViewModel() {
             _state.value = ShoppingState.Loading
             generateList(selectedYear, selectedWeek)
                 .onSuccess { loadShoppingList() }
-                .onFailure { _state.value = ShoppingState.Error(it.message ?: "Error") }
+                .onFailure {
+                    _state.value = ShoppingState.Error("No meal plan for this week. Add meals first.")
+                }
         }
     }
 

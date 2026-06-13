@@ -57,4 +57,9 @@
     <string name="no_shopping_list">No shopping list for this week</string>
     <string name="pending">Pending</string>
     <string name="completed">Completed</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="language">Language</string>
+    <string name="notifications">Notifications</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="language_hint">Change in your phone settings</string>
 </resources>

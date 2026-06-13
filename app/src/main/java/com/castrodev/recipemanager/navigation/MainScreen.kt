@@ -21,8 +21,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.castrodev.recipemanager.R
+import com.castrodev.recipemanager.features.auth.presentation.viewmodel.AuthViewModel
 import com.castrodev.recipemanager.features.mealplan.presentation.screen.MealPlanScreen
 import com.castrodev.recipemanager.features.mealplan.presentation.viewmodel.MealPlanViewModel
+import com.castrodev.recipemanager.features.profile.presentation.screen.ProfileScreen
+import com.castrodev.recipemanager.features.profile.presentation.viewmodel.ProfileViewModel
 import com.castrodev.recipemanager.features.recipes.presentation.screen.ExternalSearchScreen
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipeDetailScreen
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipesScreen
@@ -46,10 +49,12 @@ sealed class InnerScreen(val route: String) {
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
-    val navController            = rememberNavController()
-    val recipeViewModel: RecipeViewModel       = viewModel()
-    val mealPlanViewModel: MealPlanViewModel   = viewModel()
-    val shoppingViewModel: ShoppingViewModel   = viewModel()
+    val navController              = rememberNavController()
+    val authViewModel: AuthViewModel     = viewModel()
+    val recipeViewModel: RecipeViewModel = viewModel()
+    val mealPlanViewModel: MealPlanViewModel = viewModel()
+    val shoppingViewModel: ShoppingViewModel = viewModel()
+    val profileViewModel: ProfileViewModel   = viewModel()
     val tabs = listOf(BottomTab.Recipes, BottomTab.MealPlan, BottomTab.Shopping, BottomTab.Profile)
     val tabRoutes = tabs.map { it.route }
 
@@ -115,7 +120,13 @@ fun MainScreen(onLogout: () -> Unit) {
             composable(BottomTab.Shopping.route) {
                 ShoppingScreen(viewModel = shoppingViewModel)
             }
-            composable(BottomTab.Profile.route) { /* ProfileScreen — próximamente */ }
+            composable(BottomTab.Profile.route) {
+                ProfileScreen(
+                    authViewModel    = authViewModel,
+                    onLogout         = onLogout,
+                    profileViewModel = profileViewModel
+                )
+            }
         }
     }
 }

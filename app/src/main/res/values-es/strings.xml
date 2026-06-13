@@ -58,4 +58,9 @@
     <string name="no_shopping_list">No hay lista para esta semana</string>
     <string name="pending">Pendiente</string>
     <string name="completed">Completado</string>
+    <string name="edit_profile">Editar perfil</string>
+    <string name="language">Idioma</string>
+    <string name="notifications">Notificaciones</string>
+    <string name="sign_out">Cerrar sesión</string>
+    <string name="language_hint">Cámbialo en los ajustes del teléfono</string>
 </resources>
