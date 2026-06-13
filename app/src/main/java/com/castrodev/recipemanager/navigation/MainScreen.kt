@@ -27,6 +27,8 @@ import com.castrodev.recipemanager.features.recipes.presentation.screen.External
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipeDetailScreen
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipesScreen
 import com.castrodev.recipemanager.features.recipes.presentation.viewmodel.RecipeViewModel
+import com.castrodev.recipemanager.features.shopping.presentation.screen.ShoppingScreen
+import com.castrodev.recipemanager.features.shopping.presentation.viewmodel.ShoppingViewModel
 
 sealed class BottomTab(val route: String, val labelRes: Int, val icon: ImageVector) {
     object Recipes  : BottomTab("recipes",  R.string.tab_recipes,  Icons.Default.Restaurant)
@@ -44,9 +46,10 @@ sealed class InnerScreen(val route: String) {
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
-    val navController       = rememberNavController()
-    val recipeViewModel: RecipeViewModel     = viewModel()
-    val mealPlanViewModel: MealPlanViewModel = viewModel()
+    val navController            = rememberNavController()
+    val recipeViewModel: RecipeViewModel       = viewModel()
+    val mealPlanViewModel: MealPlanViewModel   = viewModel()
+    val shoppingViewModel: ShoppingViewModel   = viewModel()
     val tabs = listOf(BottomTab.Recipes, BottomTab.MealPlan, BottomTab.Shopping, BottomTab.Profile)
     val tabRoutes = tabs.map { it.route }
 
@@ -109,8 +112,10 @@ fun MainScreen(onLogout: () -> Unit) {
                     recipeViewModel   = recipeViewModel
                 )
             }
-            composable(BottomTab.Shopping.route) { /* ShoppingScreen — próximamente */ }
-            composable(BottomTab.Profile.route)  { /* ProfileScreen — próximamente */ }
+            composable(BottomTab.Shopping.route) {
+                ShoppingScreen(viewModel = shoppingViewModel)
+            }
+            composable(BottomTab.Profile.route) { /* ProfileScreen — próximamente */ }
         }
     }
 }

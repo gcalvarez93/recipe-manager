@@ -54,4 +54,8 @@
     <string name="dinner">Cena</string>
     <string name="week">Semana</string>
     <string name="select_recipe">Seleccionar receta</string>
+    <string name="generate_list">Generar lista</string>
+    <string name="no_shopping_list">No hay lista para esta semana</string>
+    <string name="pending">Pendiente</string>
+    <string name="completed">Completado</string>
 </resources>
