@@ -21,6 +21,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.castrodev.recipemanager.R
+import com.castrodev.recipemanager.features.mealplan.presentation.screen.MealPlanScreen
+import com.castrodev.recipemanager.features.mealplan.presentation.viewmodel.MealPlanViewModel
 import com.castrodev.recipemanager.features.recipes.presentation.screen.ExternalSearchScreen
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipeDetailScreen
 import com.castrodev.recipemanager.features.recipes.presentation.screen.RecipesScreen
@@ -34,26 +36,27 @@ sealed class BottomTab(val route: String, val labelRes: Int, val icon: ImageVect
 }
 
 sealed class InnerScreen(val route: String) {
-    object RecipeDetail    : InnerScreen("recipe_detail/{recipeId}") {
+    object RecipeDetail   : InnerScreen("recipe_detail/{recipeId}") {
         fun createRoute(recipeId: String) = "recipe_detail/$recipeId"
     }
-    object ExternalSearch  : InnerScreen("external_search")
+    object ExternalSearch : InnerScreen("external_search")
 }
 
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
-    val navController  = rememberNavController()
-    val recipeViewModel: RecipeViewModel = viewModel()
+    val navController       = rememberNavController()
+    val recipeViewModel: RecipeViewModel     = viewModel()
+    val mealPlanViewModel: MealPlanViewModel = viewModel()
     val tabs = listOf(BottomTab.Recipes, BottomTab.MealPlan, BottomTab.Shopping, BottomTab.Profile)
-
     val tabRoutes = tabs.map { it.route }
 
     Scaffold(
         bottomBar = {
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val navBackStackEntry  by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
-            val showBottomBar = tabRoutes.any { currentDestination?.hierarchy?.any { d -> d.route == it } == true }
-
+            val showBottomBar = tabRoutes.any { route ->
+                currentDestination?.hierarchy?.any { it.route == route } == true
+            }
             if (showBottomBar) {
                 NavigationBar {
                     tabs.forEach { tab ->
@@ -81,7 +84,7 @@ fun MainScreen(onLogout: () -> Unit) {
         ) {
             composable(BottomTab.Recipes.route) {
                 RecipesScreen(
-                    viewModel         = recipeViewModel,
+                    viewModel          = recipeViewModel,
                     onNavigateToDetail = { id -> navController.navigate(InnerScreen.RecipeDetail.createRoute(id)) },
                     onNavigateToSearch = { navController.navigate(InnerScreen.ExternalSearch.route) }
                 )
@@ -100,7 +103,12 @@ fun MainScreen(onLogout: () -> Unit) {
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
-            composable(BottomTab.MealPlan.route) { /* MealPlanScreen — próximamente */ }
+            composable(BottomTab.MealPlan.route) {
+                MealPlanScreen(
+                    mealPlanViewModel = mealPlanViewModel,
+                    recipeViewModel   = recipeViewModel
+                )
+            }
             composable(BottomTab.Shopping.route) { /* ShoppingScreen — próximamente */ }
             composable(BottomTab.Profile.route)  { /* ProfileScreen — próximamente */ }
         }

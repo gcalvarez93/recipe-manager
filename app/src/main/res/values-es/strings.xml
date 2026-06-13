@@ -42,4 +42,16 @@
     <string name="import_recipe">Importar receta</string>
     <string name="import_recipe_confirm">¿Importar "%s" a tu colección?</string>
     <string name="import_label">Importar</string>
+    <string name="monday">Lunes</string>
+    <string name="tuesday">Martes</string>
+    <string name="wednesday">Miércoles</string>
+    <string name="thursday">Jueves</string>
+    <string name="friday">Viernes</string>
+    <string name="saturday">Sábado</string>
+    <string name="sunday">Domingo</string>
+    <string name="breakfast">Desayuno</string>
+    <string name="lunch">Almuerzo</string>
+    <string name="dinner">Cena</string>
+    <string name="week">Semana</string>
+    <string name="select_recipe">Seleccionar receta</string>
 </resources>
