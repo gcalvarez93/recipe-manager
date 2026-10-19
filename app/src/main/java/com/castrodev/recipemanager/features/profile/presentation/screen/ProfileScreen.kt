@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -142,7 +143,7 @@ private fun ProfileContent(
         Card(modifier = Modifier.fillMaxWidth()) {
             ListItem(
                 headlineContent = { Text(stringResource(R.string.sign_out), color = MaterialTheme.colorScheme.error) },
-                leadingContent  = { Icon(Icons.Default.Logout, null, tint = MaterialTheme.colorScheme.error) },
+                leadingContent  = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error) },
                 modifier        = Modifier.clickable { onLogout() }
             )
         }

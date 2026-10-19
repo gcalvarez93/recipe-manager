@@ -1,9 +1,6 @@
 // Path: app/src/main/java/com/castrodev/recipemanager/features/auth/presentation/screen/LoginScreen.kt
 package com.castrodev.recipemanager.features.auth.presentation.screen
 
-import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,15 +14,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import com.castrodev.recipemanager.R
 import com.castrodev.recipemanager.features.auth.presentation.components.AuthTextField
 import com.castrodev.recipemanager.features.auth.presentation.components.GoogleSignInButton
 import com.castrodev.recipemanager.features.auth.presentation.viewmodel.AuthState
 import com.castrodev.recipemanager.features.auth.presentation.viewmodel.AuthViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import kotlinx.coroutines.launch
+import timber.log.Timber
+
+private const val GOOGLE_WEB_CLIENT_ID =
+    "647694841688-5u9b89na24jnnpav7o1cfecqlfqn4t2p.apps.googleusercontent.com"
 
 @Composable
 fun LoginScreen(
@@ -41,13 +47,29 @@ fun LoginScreen(
     var email    by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val googleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
+    // Credential Manager sustituye a la API GoogleSignIn, obsoleta.
+    val signInWithGoogle: () -> Unit = {
+        scope.launch {
             try {
-                val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
-                account.idToken?.let { viewModel.signInWithGoogle(it) }
-            } catch (e: ApiException) {
-                scope.launch { snackbarHostState.showSnackbar(e.message ?: "Google sign in failed") }
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(GetSignInWithGoogleOption.Builder(GOOGLE_WEB_CLIENT_ID).build())
+                    .build()
+                val credential = CredentialManager.create(context).getCredential(context, request).credential
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    viewModel.signInWithGoogle(GoogleIdTokenCredential.createFrom(credential.data).idToken)
+                } else {
+                    snackbarHostState.showSnackbar("Google sign in failed")
+                }
+            } catch (e: GetCredentialCancellationException) {
+                // El usuario cerró el selector de cuentas: no es un error.
+            } catch (e: GetCredentialException) {
+                Timber.w(e, "LoginScreen.signInWithGoogle")
+                snackbarHostState.showSnackbar(e.message ?: "Google sign in failed")
+            } catch (e: GoogleIdTokenParsingException) {
+                Timber.w(e, "LoginScreen.signInWithGoogle parse")
+                snackbarHostState.showSnackbar("Google sign in failed")
             }
         }
     }
@@ -94,12 +116,7 @@ fun LoginScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f))
             }
             Spacer(Modifier.height(16.dp))
-            GoogleSignInButton(onClick = {
-                val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestIdToken("647694841688-5u9b89na24jnnpav7o1cfecqlfqn4t2p.apps.googleusercontent.com")
-                    .requestEmail().build()
-                googleLauncher.launch(GoogleSignIn.getClient(context, gso).signInIntent)
-            })
+            GoogleSignInButton(onClick = signInWithGoogle)
             Spacer(Modifier.height(24.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.no_account), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
