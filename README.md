@@ -1,6 +1,6 @@
 # Recipe Manager
 
-An Android recipe and meal planning app built as part of the [CastroDev](https://castrodev.com) portfolio. Create and manage your own recipes, plan your weekly meals, and generate automatic shopping lists — with TheMealDB integration to import thousands of external recipes.
+An Android recipe and meal planning app built as part of the CastroDev portfolio. Create and manage your own recipes, plan your weekly meals, and generate automatic shopping lists — with TheMealDB integration to import thousands of external recipes.
 
 ---
 
@@ -161,13 +161,12 @@ Then:
 - [Habit Tracker](https://github.com/gcalvarez93/habit-tracker) — Daily habit tracking app (Flutter)
 - [Task Manager](https://github.com/gcalvarez93/task-manager) — Board-based task management (iOS)
 - [Budget Scanner](https://github.com/gcalvarez93/budget-scanner) — Budget & expense tracking (iOS)
-- [castrodev.com](https://castrodev.com) — Portfolio
 
 ---
 
 ## 📄 License
 
-MIT © [Gabriel Castro](https://castrodev.com)
+MIT © Gabriel Castro
 
 ---
 
@@ -175,7 +174,7 @@ MIT © [Gabriel Castro](https://castrodev.com)
 
 # Recipe Manager
 
-App Android de gestión de recetas y planificación de comidas desarrollada como parte del portfolio de [CastroDev](https://castrodev.com). Crea y gestiona tus propias recetas, planifica tus comidas semanales y genera listas de la compra automáticas — con integración con TheMealDB para importar miles de recetas externas.
+App Android de gestión de recetas y planificación de comidas desarrollada como parte del portfolio de CastroDev. Crea y gestiona tus propias recetas, planifica tus comidas semanales y genera listas de la compra automáticas — con integración con TheMealDB para importar miles de recetas externas.
 
 ---
 
@@ -281,10 +280,9 @@ A continuación:
 - [Habit Tracker](https://github.com/gcalvarez93/habit-tracker) — App de seguimiento de hábitos (Flutter)
 - [Task Manager](https://github.com/gcalvarez93/task-manager) — Gestión de tareas por tableros (iOS)
 - [Budget Scanner](https://github.com/gcalvarez93/budget-scanner) — Seguimiento de presupuestos (iOS)
-- [castrodev.com](https://castrodev.com) — Portfolio
 
 ---
 
 ## 📄 Licencia
 
-MIT © [Gabriel Castro](https://castrodev.com)
+MIT © Gabriel Castro
