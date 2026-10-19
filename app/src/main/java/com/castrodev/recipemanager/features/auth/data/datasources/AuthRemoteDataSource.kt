@@ -6,9 +6,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthRemoteDataSource {
-    private val auth = FirebaseAuth.getInstance()
+class AuthRemoteDataSource @Inject constructor(
+    private val auth: FirebaseAuth
+) {
 
     suspend fun loginWithEmail(email: String, password: String): UserModel {
         val result = auth.signInWithEmailAndPassword(email, password).await()

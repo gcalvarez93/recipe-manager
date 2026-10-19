@@ -13,7 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -50,11 +50,11 @@ sealed class InnerScreen(val route: String) {
 @Composable
 fun MainScreen(onLogout: () -> Unit) {
     val navController              = rememberNavController()
-    val authViewModel: AuthViewModel     = viewModel()
-    val recipeViewModel: RecipeViewModel = viewModel()
-    val mealPlanViewModel: MealPlanViewModel = viewModel()
-    val shoppingViewModel: ShoppingViewModel = viewModel()
-    val profileViewModel: ProfileViewModel   = viewModel()
+    val authViewModel: AuthViewModel     = hiltViewModel()
+    val recipeViewModel: RecipeViewModel = hiltViewModel()
+    val mealPlanViewModel: MealPlanViewModel = hiltViewModel()
+    val shoppingViewModel: ShoppingViewModel = hiltViewModel()
+    val profileViewModel: ProfileViewModel   = hiltViewModel()
     val tabs = listOf(BottomTab.Recipes, BottomTab.MealPlan, BottomTab.Shopping, BottomTab.Profile)
     val tabRoutes = tabs.map { it.route }
 

@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.castrodev.recipemanager.R
 import com.castrodev.recipemanager.features.shopping.presentation.components.ShoppingItemRow
 import com.castrodev.recipemanager.features.shopping.presentation.viewmodel.ShoppingState
@@ -22,7 +22,7 @@ import com.castrodev.recipemanager.features.shopping.presentation.viewmodel.Shop
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShoppingScreen(viewModel: ShoppingViewModel = viewModel()) {
+fun ShoppingScreen(viewModel: ShoppingViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
 
     Scaffold(

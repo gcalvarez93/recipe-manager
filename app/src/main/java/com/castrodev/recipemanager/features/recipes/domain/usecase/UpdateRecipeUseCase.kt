@@ -2,6 +2,7 @@
 package com.castrodev.recipemanager.features.recipes.domain.usecase
 import com.castrodev.recipemanager.features.recipes.domain.entity.RecipeEntity
 import com.castrodev.recipemanager.features.recipes.domain.repository.RecipeRepository
-class UpdateRecipeUseCase(private val repository: RecipeRepository) {
+import javax.inject.Inject
+class UpdateRecipeUseCase @Inject constructor(private val repository: RecipeRepository) {
     suspend operator fun invoke(recipe: RecipeEntity) = repository.updateRecipe(recipe)
 }

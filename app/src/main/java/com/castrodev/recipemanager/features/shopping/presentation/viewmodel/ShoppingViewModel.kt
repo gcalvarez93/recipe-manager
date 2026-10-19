@@ -3,15 +3,16 @@ package com.castrodev.recipemanager.features.shopping.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.castrodev.recipemanager.features.shopping.data.repository.ShoppingListRepositoryImpl
 import com.castrodev.recipemanager.features.shopping.domain.entity.ShoppingListEntity
 import com.castrodev.recipemanager.features.shopping.domain.usecase.GenerateShoppingListUseCase
 import com.castrodev.recipemanager.features.shopping.domain.usecase.GetShoppingListUseCase
 import com.castrodev.recipemanager.features.shopping.domain.usecase.ToggleShoppingItemUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import javax.inject.Inject
 
 sealed class ShoppingState {
     object Loading : ShoppingState()
@@ -20,11 +21,12 @@ sealed class ShoppingState {
     data class Error(val message: String) : ShoppingState()
 }
 
-class ShoppingViewModel : ViewModel() {
-    private val repository      = ShoppingListRepositoryImpl()
-    private val getShoppingList = GetShoppingListUseCase(repository)
-    private val generateList    = GenerateShoppingListUseCase(repository)
-    private val toggleItem      = ToggleShoppingItemUseCase(repository)
+@HiltViewModel
+class ShoppingViewModel @Inject constructor(
+    private val getShoppingList: GetShoppingListUseCase,
+    private val generateList: GenerateShoppingListUseCase,
+    private val toggleItem: ToggleShoppingItemUseCase
+) : ViewModel() {
 
     private val _state = MutableStateFlow<ShoppingState>(ShoppingState.Loading)
     val state: StateFlow<ShoppingState> = _state

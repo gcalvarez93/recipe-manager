@@ -3,8 +3,9 @@ package com.castrodev.recipemanager.features.auth.domain.usecase
 
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
 import com.castrodev.recipemanager.features.auth.domain.repository.AuthRepository
+import javax.inject.Inject
 
-class RegisterWithEmailUseCase(private val repository: AuthRepository) {
+class RegisterWithEmailUseCase @Inject constructor(private val repository: AuthRepository) {
     suspend operator fun invoke(email: String, password: String, name: String): Result<UserEntity> {
         if (email.isBlank() || password.isBlank() || name.isBlank())
             return Result.failure(IllegalArgumentException("All fields are required"))

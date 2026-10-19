@@ -3,8 +3,9 @@ package com.castrodev.recipemanager.features.auth.domain.usecase
 
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
 import com.castrodev.recipemanager.features.auth.domain.repository.AuthRepository
+import javax.inject.Inject
 
-class LoginWithGoogleUseCase(private val repository: AuthRepository) {
+class LoginWithGoogleUseCase @Inject constructor(private val repository: AuthRepository) {
     suspend operator fun invoke(idToken: String): Result<UserEntity> =
         repository.loginWithGoogle(idToken)
 }

@@ -3,8 +3,9 @@ package com.castrodev.recipemanager.features.auth.domain.usecase
 
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
 import com.castrodev.recipemanager.features.auth.domain.repository.AuthRepository
+import javax.inject.Inject
 
-class LoginWithEmailUseCase(private val repository: AuthRepository) {
+class LoginWithEmailUseCase @Inject constructor(private val repository: AuthRepository) {
     suspend operator fun invoke(email: String, password: String): Result<UserEntity> {
         if (email.isBlank() || password.isBlank())
             return Result.failure(IllegalArgumentException("Email and password cannot be empty"))

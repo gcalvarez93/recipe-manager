@@ -8,7 +8,9 @@ import androidx.activity.enableEdgeToEdge
 import com.castrodev.recipemanager.core.theme.RecipeManagerTheme
 import com.castrodev.recipemanager.navigation.AppNavigation
 import com.google.firebase.FirebaseApp
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

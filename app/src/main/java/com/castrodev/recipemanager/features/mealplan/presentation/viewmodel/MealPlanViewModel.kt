@@ -3,15 +3,16 @@ package com.castrodev.recipemanager.features.mealplan.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.castrodev.recipemanager.features.mealplan.data.repository.MealPlanRepositoryImpl
 import com.castrodev.recipemanager.features.mealplan.domain.entity.MealPlanEntity
 import com.castrodev.recipemanager.features.mealplan.domain.usecase.DeleteMealPlanEntryUseCase
 import com.castrodev.recipemanager.features.mealplan.domain.usecase.GetMealPlanUseCase
 import com.castrodev.recipemanager.features.mealplan.domain.usecase.UpsertMealPlanEntryUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import javax.inject.Inject
 
 sealed class MealPlanState {
     object Loading : MealPlanState()
@@ -19,11 +20,12 @@ sealed class MealPlanState {
     data class Error(val message: String) : MealPlanState()
 }
 
-class MealPlanViewModel : ViewModel() {
-    private val repository    = MealPlanRepositoryImpl()
-    private val getMealPlan   = GetMealPlanUseCase(repository)
-    private val upsertEntry   = UpsertMealPlanEntryUseCase(repository)
-    private val deleteEntry   = DeleteMealPlanEntryUseCase(repository)
+@HiltViewModel
+class MealPlanViewModel @Inject constructor(
+    private val getMealPlan: GetMealPlanUseCase,
+    private val upsertEntry: UpsertMealPlanEntryUseCase,
+    private val deleteEntry: DeleteMealPlanEntryUseCase
+) : ViewModel() {
 
     private val _state = MutableStateFlow<MealPlanState>(MealPlanState.Loading)
     val state: StateFlow<MealPlanState> = _state

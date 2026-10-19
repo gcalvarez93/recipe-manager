@@ -3,13 +3,14 @@ package com.castrodev.recipemanager.features.recipes.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.castrodev.recipemanager.features.recipes.data.repository.RecipeRepositoryImpl
 import com.castrodev.recipemanager.features.recipes.domain.entity.ExternalRecipeEntity
 import com.castrodev.recipemanager.features.recipes.domain.entity.RecipeEntity
 import com.castrodev.recipemanager.features.recipes.domain.usecase.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class RecipesState {
     object Loading : RecipesState()
@@ -31,16 +32,17 @@ sealed class ExternalSearchState {
     data class Error(val message: String) : ExternalSearchState()
 }
 
-class RecipeViewModel : ViewModel() {
-    private val repository        = RecipeRepositoryImpl()
-    private val getRecipes        = GetRecipesUseCase(repository)
-    private val getRecipeById     = GetRecipeByIdUseCase(repository)
-    private val createRecipe      = CreateRecipeUseCase(repository)
-    private val updateRecipe      = UpdateRecipeUseCase(repository)
-    private val deleteRecipe      = DeleteRecipeUseCase(repository)
-    private val toggleFavorite    = ToggleFavoriteUseCase(repository)
-    private val searchExternal    = SearchExternalRecipesUseCase(repository)
-    private val importExternal    = ImportExternalRecipeUseCase(repository)
+@HiltViewModel
+class RecipeViewModel @Inject constructor(
+    private val getRecipes: GetRecipesUseCase,
+    private val getRecipeById: GetRecipeByIdUseCase,
+    private val createRecipe: CreateRecipeUseCase,
+    private val updateRecipe: UpdateRecipeUseCase,
+    private val deleteRecipe: DeleteRecipeUseCase,
+    private val toggleFavorite: ToggleFavoriteUseCase,
+    private val searchExternal: SearchExternalRecipesUseCase,
+    private val importExternal: ImportExternalRecipeUseCase
+) : ViewModel() {
 
     private val _recipesState = MutableStateFlow<RecipesState>(RecipesState.Loading)
     val recipesState: StateFlow<RecipesState> = _recipesState

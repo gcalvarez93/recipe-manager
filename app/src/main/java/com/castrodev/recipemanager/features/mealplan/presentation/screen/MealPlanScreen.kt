@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.castrodev.recipemanager.R
 import com.castrodev.recipemanager.features.mealplan.presentation.components.MealPlanDayCard
 import com.castrodev.recipemanager.features.mealplan.presentation.viewmodel.MealPlanState
@@ -24,7 +24,7 @@ import com.castrodev.recipemanager.features.recipes.presentation.viewmodel.Recip
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MealPlanScreen(
-    mealPlanViewModel: MealPlanViewModel = viewModel(),
+    mealPlanViewModel: MealPlanViewModel = hiltViewModel(),
     recipeViewModel: RecipeViewModel
 ) {
     val state        by mealPlanViewModel.state.collectAsState()

@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.castrodev.recipemanager.R
 import com.castrodev.recipemanager.features.auth.presentation.viewmodel.AuthViewModel
 import com.castrodev.recipemanager.features.profile.domain.entity.ProfileEntity
@@ -33,7 +33,7 @@ import com.castrodev.recipemanager.features.profile.presentation.viewmodel.Profi
 fun ProfileScreen(
     authViewModel: AuthViewModel,
     onLogout: () -> Unit,
-    profileViewModel: ProfileViewModel = viewModel()
+    profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
     val state   by profileViewModel.state.collectAsState()
     val context = LocalContext.current

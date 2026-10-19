@@ -3,15 +3,17 @@ package com.castrodev.recipemanager.features.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.castrodev.recipemanager.features.auth.data.repository.AuthRepositoryImpl
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
+import com.castrodev.recipemanager.features.auth.domain.usecase.GetCurrentUserUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithEmailUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithGoogleUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.LogoutUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.RegisterWithEmailUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 sealed class AuthState {
     object Idle    : AuthState()
@@ -20,17 +22,19 @@ sealed class AuthState {
     data class Error(val message: String)    : AuthState()
 }
 
-class AuthViewModel : ViewModel() {
-    private val repository        = AuthRepositoryImpl()
-    private val loginWithEmail    = LoginWithEmailUseCase(repository)
-    private val registerWithEmail = RegisterWithEmailUseCase(repository)
-    private val loginWithGoogle   = LoginWithGoogleUseCase(repository)
-    private val logout            = LogoutUseCase(repository)
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val loginWithEmail: LoginWithEmailUseCase,
+    private val registerWithEmail: RegisterWithEmailUseCase,
+    private val loginWithGoogle: LoginWithGoogleUseCase,
+    private val logout: LogoutUseCase,
+    getCurrentUser: GetCurrentUserUseCase
+) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    private val _isAuthenticated = MutableStateFlow(repository.getCurrentUser() != null)
+    private val _isAuthenticated = MutableStateFlow(getCurrentUser() != null)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
 
     fun signInWithEmail(email: String, password: String) {
