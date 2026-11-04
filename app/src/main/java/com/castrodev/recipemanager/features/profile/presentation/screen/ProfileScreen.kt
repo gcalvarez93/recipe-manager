@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,18 +37,31 @@ fun ProfileScreen(
     onLogout: () -> Unit,
     profileViewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val state   by profileViewModel.state.collectAsState()
-    val context = LocalContext.current
+    val state       by profileViewModel.state.collectAsState()
+    val isUpdating  by profileViewModel.isUpdating.collectAsState()
+    val actionError by profileViewModel.actionError.collectAsState()
+    val context     = LocalContext.current
+    val resources         = LocalResources.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(actionError) {
+        actionError?.let { res ->
+            snackbarHostState.showSnackbar(resources.getString(res))
+            profileViewModel.clearActionError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_profile)) }) }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
                 is ProfileState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is ProfileState.Error   -> Text(s.message, modifier = Modifier.align(Alignment.Center))
+                is ProfileState.Error   -> Text(stringResource(s.messageRes), modifier = Modifier.align(Alignment.Center))
                 is ProfileState.Success -> ProfileContent(
                     profile        = s.profile,
+                    isUpdating     = isUpdating,
                     onUpdate       = { name, lang, notifs -> profileViewModel.update(name, lang, notifs) },
                     onOpenSettings = {
                         val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
@@ -65,12 +79,12 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     profile: ProfileEntity,
+    isUpdating: Boolean,
     onUpdate: (String, String, Boolean) -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
-    var notifications  by remember { mutableStateOf(profile.notifications) }
 
     Column(
         modifier = Modifier
@@ -112,7 +126,7 @@ private fun ProfileContent(
                     headlineContent = { Text(stringResource(R.string.edit_profile)) },
                     leadingContent  = { Icon(Icons.Default.Person, null) },
                     trailingContent = { Icon(Icons.Default.ChevronRight, null) },
-                    modifier        = Modifier.clickable { showEditDialog = true }
+                    modifier        = Modifier.clickable(enabled = !isUpdating) { showEditDialog = true }
                 )
                 HorizontalDivider()
                 ListItem(
@@ -125,12 +139,12 @@ private fun ProfileContent(
                     headlineContent = { Text(stringResource(R.string.notifications)) },
                     leadingContent  = { Icon(Icons.Default.Notifications, null) },
                     trailingContent = {
+                        // El interruptor refleja el valor guardado, no uno optimista: si el guardado
+                        // falla, vuelve solo a su posición y no queda mostrando algo que no es cierto.
                         Switch(
-                            checked         = notifications,
-                            onCheckedChange = {
-                                notifications = it
-                                onUpdate(profile.name, profile.language, it)
-                            }
+                            checked         = profile.notifications,
+                            enabled         = !isUpdating,
+                            onCheckedChange = { onUpdate(profile.name, profile.language, it) }
                         )
                     }
                 )
@@ -152,7 +166,7 @@ private fun ProfileContent(
     if (showEditDialog) {
         EditProfileDialog(
             currentName = profile.name,
-            onSave      = { name -> onUpdate(name, profile.language, profile.notifications); showEditDialog = false },
+            onSave      = { name -> onUpdate(name.trim(), profile.language, profile.notifications); showEditDialog = false },
             onDismiss   = { showEditDialog = false }
         )
     }

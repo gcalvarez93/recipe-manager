@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -28,15 +29,19 @@ fun RegisterScreen(
 ) {
     val authState         by viewModel.authState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val resources           = LocalResources.current
 
     var name     by remember { mutableStateOf("") }
     var email    by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     LaunchedEffect(authState) {
-        when (authState) {
+        when (val state = authState) {
             is AuthState.Success -> onRegisterSuccess()
-            is AuthState.Error   -> { snackbarHostState.showSnackbar((authState as AuthState.Error).message); viewModel.clearError() }
+            is AuthState.Error   -> {
+                snackbarHostState.showSnackbar(resources.getString(state.messageRes))
+                viewModel.clearError()
+            }
             else -> Unit
         }
     }

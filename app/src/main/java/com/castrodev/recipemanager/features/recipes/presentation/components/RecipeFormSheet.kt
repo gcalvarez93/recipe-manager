@@ -1,6 +1,7 @@
 // Path: app/src/main/java/com/castrodev/recipemanager/features/recipes/presentation/components/RecipeFormSheet.kt
 package com.castrodev.recipemanager.features.recipes.presentation.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,12 +48,21 @@ private data class IngredientForm(
 
 private data class StepForm(val description: String = "")
 
+/**
+ * Formulario de receta.
+ *
+ * [isSaving] desactiva el botón mientras se guarda, y [errorRes] muestra dentro de la hoja el
+ * motivo por el que falló el guardado. El formulario no se cierra solo: lo cierra quien lo
+ * usa cuando el guardado ha ido bien, así no se pierde lo que el usuario había escrito.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeFormSheet(
     recipe: RecipeEntity? = null,
     onSave: (RecipeEntity) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isSaving: Boolean = false,
+    @StringRes errorRes: Int? = null
 ) {
     var name        by remember { mutableStateOf(recipe?.name ?: "") }
     var description by remember { mutableStateOf(recipe?.description ?: "") }
@@ -176,15 +188,24 @@ fun RecipeFormSheet(
             }
             Spacer(Modifier.height(24.dp))
 
+            if (errorRes != null) {
+                Text(
+                    text  = stringResource(errorRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
             Button(
                 onClick = {
                     onSave(
                         RecipeEntity(
                             id              = recipe?.id ?: "",
-                            name            = name,
-                            description     = description,
-                            category        = category,
-                            imageUrl        = imageUrl,
+                            name            = name.trim(),
+                            description     = description.trim(),
+                            category        = category.trim(),
+                            imageUrl        = imageUrl.trim(),
                             prepTimeMinutes = prepTime.toIntOrNull() ?: 0,
                             cookTimeMinutes = cookTime.toIntOrNull() ?: 0,
                             servings        = servings.toIntOrNull() ?: 1,
@@ -199,9 +220,12 @@ fun RecipeFormSheet(
                         )
                     )
                 },
-                enabled  = name.isNotBlank(),
+                enabled  = name.isNotBlank() && !isSaving,
                 modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(R.string.save)) }
+            ) {
+                if (isSaving) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                else Text(stringResource(R.string.save))
+            }
             Spacer(Modifier.height(32.dp))
         }
     }

@@ -1,12 +1,15 @@
 // Path: app/src/main/java/com/castrodev/recipemanager/features/recipes/presentation/viewmodel/RecipeViewModel.kt
 package com.castrodev.recipemanager.features.recipes.presentation.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.castrodev.recipemanager.core.ui.toMessageRes
 import com.castrodev.recipemanager.features.recipes.domain.entity.ExternalRecipeEntity
 import com.castrodev.recipemanager.features.recipes.domain.entity.RecipeEntity
 import com.castrodev.recipemanager.features.recipes.domain.usecase.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,21 +18,21 @@ import javax.inject.Inject
 sealed class RecipesState {
     object Loading : RecipesState()
     data class Success(val recipes: List<RecipeEntity>) : RecipesState()
-    data class Error(val message: String) : RecipesState()
+    data class Error(@StringRes val messageRes: Int) : RecipesState()
 }
 
 sealed class RecipeDetailState {
     object Idle : RecipeDetailState()
     object Loading : RecipeDetailState()
     data class Success(val recipe: RecipeEntity) : RecipeDetailState()
-    data class Error(val message: String) : RecipeDetailState()
+    data class Error(@StringRes val messageRes: Int) : RecipeDetailState()
 }
 
 sealed class ExternalSearchState {
     object Idle : ExternalSearchState()
     object Loading : ExternalSearchState()
     data class Success(val recipes: List<ExternalRecipeEntity>) : ExternalSearchState()
-    data class Error(val message: String) : ExternalSearchState()
+    data class Error(@StringRes val messageRes: Int) : ExternalSearchState()
 }
 
 @HiltViewModel
@@ -56,17 +59,32 @@ class RecipeViewModel @Inject constructor(
     private val _actionSuccess = MutableStateFlow(false)
     val actionSuccess: StateFlow<Boolean> = _actionSuccess
 
+    /** `true` mientras se guarda, borra o importa: la UI desactiva el botón para evitar dobles envíos. */
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving
+
+    /**
+     * Error de la última acción de escritura (crear, editar, borrar, favorito, importar).
+     * Se publica aparte del estado de la lista: un fallo al guardar no debe borrar lo ya cargado.
+     */
+    private val _actionError = MutableStateFlow<Int?>(null)
+    val actionError: StateFlow<Int?> = _actionError
+
     var selectedCategory: String? = null
     var favoritesOnly: Boolean = false
+
+    private var loadJob: Job? = null
 
     init { loadRecipes() }
 
     fun loadRecipes() {
-        viewModelScope.launch {
+        // Si hay una carga en curso se descarta: gana siempre la última petición.
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _recipesState.value = RecipesState.Loading
             getRecipes(selectedCategory, if (favoritesOnly) true else null)
                 .onSuccess { _recipesState.value = RecipesState.Success(it) }
-                .onFailure { _recipesState.value = RecipesState.Error(it.message ?: "Error") }
+                .onFailure { _recipesState.value = RecipesState.Error(it.toMessageRes()) }
         }
     }
 
@@ -75,37 +93,24 @@ class RecipeViewModel @Inject constructor(
             _detailState.value = RecipeDetailState.Loading
             getRecipeById(id)
                 .onSuccess { _detailState.value = RecipeDetailState.Success(it) }
-                .onFailure { _detailState.value = RecipeDetailState.Error(it.message ?: "Error") }
+                .onFailure { _detailState.value = RecipeDetailState.Error(it.toMessageRes()) }
         }
     }
 
-    fun create(recipe: RecipeEntity) {
-        viewModelScope.launch {
-            createRecipe(recipe)
-                .onSuccess { _actionSuccess.value = true; loadRecipes() }
-                .onFailure { _recipesState.value = RecipesState.Error(it.message ?: "Error") }
-        }
-    }
+    fun create(recipe: RecipeEntity) = perform(markSuccess = true) { createRecipe(recipe) }
 
-    fun update(recipe: RecipeEntity) {
-        viewModelScope.launch {
-            updateRecipe(recipe)
-                .onSuccess { _actionSuccess.value = true; loadRecipes() }
-                .onFailure { _recipesState.value = RecipesState.Error(it.message ?: "Error") }
-        }
-    }
+    fun update(recipe: RecipeEntity) = perform(markSuccess = true) { updateRecipe(recipe) }
 
-    fun delete(id: String) {
-        viewModelScope.launch {
-            deleteRecipe(id)
-                .onSuccess { loadRecipes() }
-                .onFailure { _recipesState.value = RecipesState.Error(it.message ?: "Error") }
-        }
-    }
+    fun delete(id: String) = perform(markSuccess = false) { deleteRecipe(id) }
+
+    fun importExternal(recipe: ExternalRecipeEntity) =
+        perform(markSuccess = true) { importExternal.invoke(recipe) }
 
     fun toggleFavorite(id: String) {
         viewModelScope.launch {
-            toggleFavorite.invoke(id).onSuccess { loadRecipes() }
+            toggleFavorite.invoke(id)
+                .onSuccess { loadRecipes() }
+                .onFailure { _actionError.value = it.toMessageRes() }
         }
     }
 
@@ -114,18 +119,33 @@ class RecipeViewModel @Inject constructor(
             _externalState.value = ExternalSearchState.Loading
             searchExternal.invoke(query)
                 .onSuccess { _externalState.value = ExternalSearchState.Success(it) }
-                .onFailure { _externalState.value = ExternalSearchState.Error(it.message ?: "Error") }
+                .onFailure { _externalState.value = ExternalSearchState.Error(it.toMessageRes()) }
         }
     }
 
-    fun importExternal(recipe: ExternalRecipeEntity) {
+    /**
+     * Ejecuta una escritura. Si falla, el error se publica en [actionError] y la lista cargada
+     * y el formulario abierto se quedan como están. Si va bien, se recarga la lista.
+     */
+    private fun perform(markSuccess: Boolean, action: suspend () -> Result<Any?>) {
+        if (_isSaving.value) return
+        _isSaving.value = true
+        _actionError.value = null
         viewModelScope.launch {
-            importExternal.invoke(recipe)
-                .onSuccess { _actionSuccess.value = true; loadRecipes() }
-                .onFailure { _recipesState.value = RecipesState.Error(it.message ?: "Error") }
+            try {
+                action()
+                    .onSuccess {
+                        if (markSuccess) _actionSuccess.value = true
+                        loadRecipes()
+                    }
+                    .onFailure { _actionError.value = it.toMessageRes() }
+            } finally {
+                _isSaving.value = false
+            }
         }
     }
 
     fun resetActionSuccess() { _actionSuccess.value = false }
+    fun clearActionError() { _actionError.value = null }
     fun clearExternalSearch() { _externalState.value = ExternalSearchState.Idle }
 }

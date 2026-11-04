@@ -63,4 +63,22 @@
     <string name="notifications">Notificaciones</string>
     <string name="sign_out">Cerrar sesión</string>
     <string name="language_hint">Cámbialo en los ajustes del teléfono</string>
+
+    <!-- Errores que ve el usuario. El detalle técnico va al log, nunca a la pantalla. -->
+    <string name="error_network">Sin conexión a internet. Revisa tu red e inténtalo de nuevo.</string>
+    <string name="error_server">El servidor tiene problemas. Inténtalo de nuevo más tarde.</string>
+    <string name="error_unauthorized">Tu sesión ya no es válida. Inicia sesión de nuevo.</string>
+    <string name="error_not_found">No hemos encontrado lo que buscabas.</string>
+    <string name="error_too_many_requests">Demasiados intentos. Espera un momento e inténtalo de nuevo.</string>
+    <string name="error_invalid_credentials">Correo o contraseña incorrectos.</string>
+    <string name="error_invalid_email">Introduce un correo electrónico válido.</string>
+    <string name="error_email_in_use">Ya existe una cuenta con este correo.</string>
+    <string name="error_weak_password">La contraseña es demasiado débil. Usa al menos 6 caracteres.</string>
+    <string name="error_google_sign_in">No se pudo iniciar sesión con Google. Inténtalo de nuevo.</string>
+    <string name="error_no_meal_plan">No hay plan de comidas para esta semana. Añade comidas primero.</string>
+    <string name="error_unknown">Algo ha salido mal. Inténtalo de nuevo.</string>
+    <string name="validation_email_password_required">Introduce tu correo y tu contraseña.</string>
+    <string name="validation_all_fields_required">Todos los campos son obligatorios.</string>
+    <string name="validation_password_too_short">La contraseña debe tener al menos 6 caracteres.</string>
+    <string name="validation_recipe_name_required">La receta necesita un nombre.</string>
 </resources>

@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,9 +24,20 @@ import com.castrodev.recipemanager.features.shopping.presentation.viewmodel.Shop
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShoppingScreen(viewModel: ShoppingViewModel = hiltViewModel()) {
-    val state by viewModel.state.collectAsState()
+    val state       by viewModel.state.collectAsState()
+    val actionError by viewModel.actionError.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources           = LocalResources.current
+
+    LaunchedEffect(actionError) {
+        actionError?.let { res ->
+            snackbarHostState.showSnackbar(resources.getString(res))
+            viewModel.clearActionError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.tab_shopping)) },
@@ -54,7 +66,7 @@ fun ShoppingScreen(viewModel: ShoppingViewModel = hiltViewModel()) {
 
             when (val s = state) {
                 is ShoppingState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                is ShoppingState.Error   -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(s.message) }
+                is ShoppingState.Error   -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(s.messageRes)) }
                 is ShoppingState.Empty   -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {

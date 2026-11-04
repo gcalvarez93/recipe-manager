@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -43,11 +44,14 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope             = rememberCoroutineScope()
     val context           = LocalContext.current
+    val resources         = LocalResources.current
+    val googleErrorText   = stringResource(R.string.error_google_sign_in)
 
     var email    by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     // Credential Manager sustituye a la API GoogleSignIn, obsoleta.
+    // El detalle técnico de cada fallo va al log; el usuario ve siempre el mismo texto localizado.
     val signInWithGoogle: () -> Unit = {
         scope.launch {
             try {
@@ -60,24 +64,28 @@ fun LoginScreen(
                 ) {
                     viewModel.signInWithGoogle(GoogleIdTokenCredential.createFrom(credential.data).idToken)
                 } else {
-                    snackbarHostState.showSnackbar("Google sign in failed")
+                    Timber.w("LoginScreen.signInWithGoogle unexpected credential type: %s", credential.type)
+                    snackbarHostState.showSnackbar(googleErrorText)
                 }
             } catch (e: GetCredentialCancellationException) {
                 // El usuario cerró el selector de cuentas: no es un error.
             } catch (e: GetCredentialException) {
                 Timber.w(e, "LoginScreen.signInWithGoogle")
-                snackbarHostState.showSnackbar(e.message ?: "Google sign in failed")
+                snackbarHostState.showSnackbar(googleErrorText)
             } catch (e: GoogleIdTokenParsingException) {
                 Timber.w(e, "LoginScreen.signInWithGoogle parse")
-                snackbarHostState.showSnackbar("Google sign in failed")
+                snackbarHostState.showSnackbar(googleErrorText)
             }
         }
     }
 
     LaunchedEffect(authState) {
-        when (authState) {
+        when (val state = authState) {
             is AuthState.Success -> onLoginSuccess()
-            is AuthState.Error   -> { snackbarHostState.showSnackbar((authState as AuthState.Error).message); viewModel.clearError() }
+            is AuthState.Error   -> {
+                snackbarHostState.showSnackbar(resources.getString(state.messageRes))
+                viewModel.clearError()
+            }
             else -> Unit
         }
     }
@@ -116,7 +124,9 @@ fun LoginScreen(
                 HorizontalDivider(modifier = Modifier.weight(1f))
             }
             Spacer(Modifier.height(16.dp))
-            GoogleSignInButton(onClick = signInWithGoogle)
+            // Con un inicio de sesión en curso, el botón de Google no hace nada (el ViewModel
+            // también lo descarta, pero así ni siquiera se abre el selector de cuentas).
+            GoogleSignInButton(onClick = { if (authState !is AuthState.Loading) signInWithGoogle() })
             Spacer(Modifier.height(24.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.no_account), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))

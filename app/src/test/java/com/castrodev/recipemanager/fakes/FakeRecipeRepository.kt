@@ -16,13 +16,20 @@ fun testRecipe(id: String = "r1", name: String = "Tortilla de patatas") = Recipe
 class FakeRecipeRepository : RecipeRepository {
     var recipesResult: Result<List<RecipeEntity>> = Result.success(emptyList())
     var createResult: Result<String> = Result.success("new-id")
+    var updateResult: Result<Unit> = Result.success(Unit)
+    var deleteResult: Result<Unit> = Result.success(Unit)
     var toggleResult: Result<Unit> = Result.success(Unit)
+    var searchResult: Result<List<ExternalRecipeEntity>> = Result.success(emptyList())
+    var importResult: Result<String> = Result.success("imported-id")
 
     var getRecipesCalls = 0
+    var updateCalls = 0
     var lastCategory: String? = null
     var lastFavoritesOnly: Boolean? = null
     var toggledId: String? = null
+    var deletedId: String? = null
     var created: RecipeEntity? = null
+    var updated: RecipeEntity? = null
 
     override suspend fun getRecipes(category: String?, favoritesOnly: Boolean?): Result<List<RecipeEntity>> {
         getRecipesCalls++
@@ -39,18 +46,23 @@ class FakeRecipeRepository : RecipeRepository {
         return createResult
     }
 
-    override suspend fun updateRecipe(recipe: RecipeEntity): Result<Unit> = Result.success(Unit)
+    override suspend fun updateRecipe(recipe: RecipeEntity): Result<Unit> {
+        updateCalls++
+        updated = recipe
+        return updateResult
+    }
 
-    override suspend fun deleteRecipe(id: String): Result<Unit> = Result.success(Unit)
+    override suspend fun deleteRecipe(id: String): Result<Unit> {
+        deletedId = id
+        return deleteResult
+    }
 
     override suspend fun toggleFavorite(id: String): Result<Unit> {
         toggledId = id
         return toggleResult
     }
 
-    override suspend fun searchExternalRecipes(query: String): Result<List<ExternalRecipeEntity>> =
-        Result.success(emptyList())
+    override suspend fun searchExternalRecipes(query: String): Result<List<ExternalRecipeEntity>> = searchResult
 
-    override suspend fun importExternalRecipe(recipe: ExternalRecipeEntity): Result<String> =
-        Result.success("imported-id")
+    override suspend fun importExternalRecipe(recipe: ExternalRecipeEntity): Result<String> = importResult
 }

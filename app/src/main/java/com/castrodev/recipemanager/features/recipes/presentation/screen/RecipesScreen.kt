@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -29,13 +30,28 @@ fun RecipesScreen(
 ) {
     val state          by viewModel.recipesState.collectAsState()
     val actionSuccess  by viewModel.actionSuccess.collectAsState()
+    val isSaving       by viewModel.isSaving.collectAsState()
+    val actionError    by viewModel.actionError.collectAsState()
     var showAddSheet   by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources           = LocalResources.current
 
     LaunchedEffect(actionSuccess) {
         if (actionSuccess) { showAddSheet = false; viewModel.resetActionSuccess() }
     }
 
+    // Con el formulario abierto, el error se ve dentro de él. Sin formulario (favorito que falla,
+    // borrado desde el detalle) se avisa con un snackbar.
+    LaunchedEffect(actionError, showAddSheet) {
+        val res = actionError
+        if (res != null && !showAddSheet) {
+            snackbarHostState.showSnackbar(resources.getString(res))
+            viewModel.clearActionError()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.tab_recipes)) },
@@ -46,7 +62,7 @@ fun RecipesScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddSheet = true },
+                onClick = { viewModel.clearActionError(); showAddSheet = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) { Icon(Icons.Default.Add, null) }
         }
@@ -54,7 +70,7 @@ fun RecipesScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
                 is RecipesState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is RecipesState.Error   -> Text(s.message, modifier = Modifier.align(Alignment.Center))
+                is RecipesState.Error   -> Text(stringResource(s.messageRes), modifier = Modifier.align(Alignment.Center))
                 is RecipesState.Success -> {
                     if (s.recipes.isEmpty()) {
                         Text(stringResource(R.string.no_recipes), modifier = Modifier.align(Alignment.Center))
@@ -80,7 +96,9 @@ fun RecipesScreen(
     if (showAddSheet) {
         RecipeFormSheet(
             onSave    = { viewModel.create(it) },
-            onDismiss = { showAddSheet = false }
+            onDismiss = { showAddSheet = false; viewModel.clearActionError() },
+            isSaving  = isSaving,
+            errorRes  = actionError
         )
     }
 }

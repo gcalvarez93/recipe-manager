@@ -33,6 +33,8 @@ fun RecipeDetailScreen(
 ) {
     val state         by viewModel.detailState.collectAsState()
     val actionSuccess by viewModel.actionSuccess.collectAsState()
+    val isSaving      by viewModel.isSaving.collectAsState()
+    val actionError   by viewModel.actionError.collectAsState()
     var showEditSheet by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -48,7 +50,7 @@ fun RecipeDetailScreen(
                 navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) } },
                 actions = {
                     if (state is RecipeDetailState.Success) {
-                        IconButton(onClick = { showEditSheet = true }) { Icon(Icons.Default.Edit, null) }
+                        IconButton(onClick = { viewModel.clearActionError(); showEditSheet = true }) { Icon(Icons.Default.Edit, null) }
                         IconButton(onClick = { showDeleteDialog = true }) { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }
                     }
                 }
@@ -58,7 +60,7 @@ fun RecipeDetailScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
                 is RecipeDetailState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is RecipeDetailState.Error   -> Text(s.message, modifier = Modifier.align(Alignment.Center))
+                is RecipeDetailState.Error   -> Text(stringResource(s.messageRes), modifier = Modifier.align(Alignment.Center))
                 is RecipeDetailState.Success -> {
                     val recipe = s.recipe
                     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
@@ -109,7 +111,13 @@ fun RecipeDetailScreen(
                     }
 
                     if (showEditSheet) {
-                        RecipeFormSheet(recipe = recipe, onSave = { viewModel.update(it) }, onDismiss = { showEditSheet = false })
+                        RecipeFormSheet(
+                            recipe    = recipe,
+                            onSave    = { viewModel.update(it) },
+                            onDismiss = { showEditSheet = false; viewModel.clearActionError() },
+                            isSaving  = isSaving,
+                            errorRes  = actionError
+                        )
                     }
                 }
                 else -> Unit
@@ -117,6 +125,7 @@ fun RecipeDetailScreen(
         }
     }
 
+    // Si el borrado falla, el aviso lo da la lista (ver RecipesScreen), porque aquí ya se ha vuelto atrás.
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },

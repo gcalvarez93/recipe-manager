@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Recipe Manager</string>
     <string name="tab_recipes">Recipes</string>
@@ -62,4 +63,22 @@
     <string name="notifications">Notifications</string>
     <string name="sign_out">Sign Out</string>
     <string name="language_hint">Change in your phone settings</string>
+
+    <!-- Errors shown to the user. Technical detail goes to the log, never to the screen. -->
+    <string name="error_network">No internet connection. Check your network and try again.</string>
+    <string name="error_server">The server is having problems. Please try again later.</string>
+    <string name="error_unauthorized">Your session is no longer valid. Please sign in again.</string>
+    <string name="error_not_found">We could not find what you were looking for.</string>
+    <string name="error_too_many_requests">Too many attempts. Please wait a moment and try again.</string>
+    <string name="error_invalid_credentials">Incorrect email or password.</string>
+    <string name="error_invalid_email">Enter a valid email address.</string>
+    <string name="error_email_in_use">An account with this email already exists.</string>
+    <string name="error_weak_password">The password is too weak. Use at least 6 characters.</string>
+    <string name="error_google_sign_in">Google sign-in failed. Please try again.</string>
+    <string name="error_no_meal_plan">No meal plan for this week. Add meals first.</string>
+    <string name="error_unknown">Something went wrong. Please try again.</string>
+    <string name="validation_email_password_required">Enter your email and password.</string>
+    <string name="validation_all_fields_required">All fields are required.</string>
+    <string name="validation_password_too_short">The password must be at least 6 characters.</string>
+    <string name="validation_recipe_name_required">The recipe needs a name.</string>
 </resources>

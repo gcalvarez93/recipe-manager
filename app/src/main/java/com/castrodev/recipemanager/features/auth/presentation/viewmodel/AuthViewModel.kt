@@ -1,8 +1,10 @@
 // Path: app/src/main/java/com/castrodev/recipemanager/features/auth/presentation/viewmodel/AuthViewModel.kt
 package com.castrodev.recipemanager.features.auth.presentation.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.castrodev.recipemanager.core.ui.toMessageRes
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
 import com.castrodev.recipemanager.features.auth.domain.usecase.GetCurrentUserUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithEmailUseCase
@@ -19,7 +21,9 @@ sealed class AuthState {
     object Idle    : AuthState()
     object Loading : AuthState()
     data class Success(val user: UserEntity) : AuthState()
-    data class Error(val message: String)    : AuthState()
+
+    /** [messageRes] es un texto localizado y apto para el usuario, nunca el mensaje de la excepción. */
+    data class Error(@StringRes val messageRes: Int) : AuthState()
 }
 
 @HiltViewModel
@@ -37,30 +41,23 @@ class AuthViewModel @Inject constructor(
     private val _isAuthenticated = MutableStateFlow(getCurrentUser() != null)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
 
-    fun signInWithEmail(email: String, password: String) {
-        viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            loginWithEmail(email, password)
-                .onSuccess { _isAuthenticated.value = true; _authState.value = AuthState.Success(it) }
-                .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
-        }
-    }
+    fun signInWithEmail(email: String, password: String) =
+        authenticate { loginWithEmail(email, password) }
 
-    fun signUpWithEmail(email: String, password: String, name: String) {
-        viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            registerWithEmail(email, password, name)
-                .onSuccess { _isAuthenticated.value = true; _authState.value = AuthState.Success(it) }
-                .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
-        }
-    }
+    fun signUpWithEmail(email: String, password: String, name: String) =
+        authenticate { registerWithEmail(email, password, name) }
 
-    fun signInWithGoogle(idToken: String) {
+    fun signInWithGoogle(idToken: String) =
+        authenticate { loginWithGoogle(idToken) }
+
+    /** Un solo intento a la vez: un segundo toque mientras hay uno en curso se ignora. */
+    private fun authenticate(request: suspend () -> Result<UserEntity>) {
+        if (_authState.value is AuthState.Loading) return
+        _authState.value = AuthState.Loading
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            loginWithGoogle(idToken)
+            request()
                 .onSuccess { _isAuthenticated.value = true; _authState.value = AuthState.Success(it) }
-                .onFailure { _authState.value = AuthState.Error(it.message ?: "Unknown error") }
+                .onFailure { _authState.value = AuthState.Error(it.toMessageRes()) }
         }
     }
 

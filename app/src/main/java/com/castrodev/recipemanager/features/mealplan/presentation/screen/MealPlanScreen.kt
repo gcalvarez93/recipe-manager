@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,7 +29,17 @@ fun MealPlanScreen(
     recipeViewModel: RecipeViewModel
 ) {
     val state        by mealPlanViewModel.state.collectAsState()
+    val actionError  by mealPlanViewModel.actionError.collectAsState()
     val recipesState by recipeViewModel.recipesState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val resources           = LocalResources.current
+
+    LaunchedEffect(actionError) {
+        actionError?.let { res ->
+            snackbarHostState.showSnackbar(resources.getString(res))
+            mealPlanViewModel.clearActionError()
+        }
+    }
 
     // day key → label
     val days = mapOf(
@@ -50,6 +61,7 @@ fun MealPlanScreen(
     var showPickerFor by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_mealplan)) }) }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -69,7 +81,7 @@ fun MealPlanScreen(
 
             when (val s = state) {
                 is MealPlanState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                is MealPlanState.Error   -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(s.message) }
+                is MealPlanState.Error   -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(stringResource(s.messageRes)) }
                 is MealPlanState.Success -> {
                     val entries = s.plan?.entries ?: emptyList()
                     LazyColumn(

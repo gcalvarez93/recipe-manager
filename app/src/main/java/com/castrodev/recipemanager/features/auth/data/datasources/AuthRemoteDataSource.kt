@@ -5,7 +5,9 @@ import com.castrodev.recipemanager.features.auth.data.model.UserModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 import javax.inject.Inject
 
 class AuthRemoteDataSource @Inject constructor(
@@ -19,10 +21,17 @@ class AuthRemoteDataSource @Inject constructor(
     }
 
     suspend fun registerWithEmail(email: String, password: String, name: String): UserModel {
-        val result  = auth.createUserWithEmailAndPassword(email, password).await()
-        val user    = result.user ?: throw IllegalStateException("Registration failed")
-        val request = userProfileChangeRequest { displayName = name }
-        user.updateProfile(request).await()
+        val result = auth.createUserWithEmailAndPassword(email, password).await()
+        val user   = result.user ?: throw IllegalStateException("Registration failed")
+        // La cuenta ya existe en este punto. Si guardar el nombre falla, no se puede dar el
+        // registro por fallido: el usuario reintentaría y vería "email ya en uso".
+        try {
+            user.updateProfile(userProfileChangeRequest { displayName = name }).await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "AuthRemoteDataSource.registerWithEmail displayName")
+        }
         return UserModel(id = user.uid, email = user.email ?: "", name = name, photoUrl = user.photoUrl?.toString())
     }
 

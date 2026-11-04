@@ -31,6 +31,8 @@ fun ExternalSearchScreen(
 ) {
     val state         by viewModel.externalState.collectAsState()
     val actionSuccess by viewModel.actionSuccess.collectAsState()
+    val isSaving      by viewModel.isSaving.collectAsState()
+    val actionError   by viewModel.actionError.collectAsState()
     var query         by remember { mutableStateOf("") }
     var importTarget  by remember { mutableStateOf<ExternalRecipeEntity?>(null) }
 
@@ -51,19 +53,22 @@ fun ExternalSearchScreen(
             OutlinedTextField(
                 value = query, onValueChange = { query = it },
                 label = { Text(stringResource(R.string.search_recipe)) },
-                trailingIcon = { IconButton(onClick = { if (query.isNotBlank()) viewModel.searchExternal(query) }) { Icon(Icons.Default.Search, null) } },
+                trailingIcon = { IconButton(onClick = { if (query.isNotBlank()) viewModel.searchExternal(query.trim()) }) { Icon(Icons.Default.Search, null) } },
                 modifier = Modifier.fillMaxWidth(), singleLine = true
             )
             Spacer(Modifier.height(16.dp))
 
             when (val s = state) {
                 is ExternalSearchState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                is ExternalSearchState.Error   -> Text(s.message, color = MaterialTheme.colorScheme.error)
+                is ExternalSearchState.Error   -> Text(stringResource(s.messageRes), color = MaterialTheme.colorScheme.error)
                 is ExternalSearchState.Success -> {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(s.recipes, key = { it.externalId }) { recipe ->
                             Card(
-                                modifier = Modifier.fillMaxWidth().clickable { importTarget = recipe },
+                                modifier = Modifier.fillMaxWidth().clickable {
+                                    viewModel.clearActionError()
+                                    importTarget = recipe
+                                },
                                 shape = RoundedCornerShape(12.dp)
                             ) {
                                 Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -86,15 +91,26 @@ fun ExternalSearchScreen(
         }
     }
 
+    // El diálogo se queda abierto si la importación falla, y muestra el motivo dentro de él.
     importTarget?.let { recipe ->
         AlertDialog(
-            onDismissRequest = { importTarget = null },
+            onDismissRequest = { importTarget = null; viewModel.clearActionError() },
             title = { Text(stringResource(R.string.import_recipe)) },
-            text  = { Text(stringResource(R.string.import_recipe_confirm, recipe.name)) },
-            confirmButton = {
-                TextButton(onClick = { viewModel.importExternal(recipe) }) { Text(stringResource(R.string.import_label)) }
+            text  = {
+                Column {
+                    Text(stringResource(R.string.import_recipe_confirm, recipe.name))
+                    actionError?.let { res ->
+                        Spacer(Modifier.height(12.dp))
+                        Text(stringResource(res), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
             },
-            dismissButton = { TextButton(onClick = { importTarget = null }) { Text(stringResource(R.string.cancel)) } }
+            confirmButton = {
+                TextButton(onClick = { viewModel.importExternal(recipe) }, enabled = !isSaving) {
+                    Text(stringResource(R.string.import_label))
+                }
+            },
+            dismissButton = { TextButton(onClick = { importTarget = null; viewModel.clearActionError() }) { Text(stringResource(R.string.cancel)) } }
         )
     }
 }

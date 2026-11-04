@@ -1,6 +1,7 @@
 // Path: app/src/test/java/com/castrodev/recipemanager/features/recipes/data/repository/RecipeRepositoryImplTest.kt
 package com.castrodev.recipemanager.features.recipes.data.repository
 
+import com.castrodev.recipemanager.core.error.AppError
 import com.castrodev.recipemanager.features.recipes.data.datasource.RecipeRemoteDataSource
 import com.castrodev.recipemanager.features.recipes.data.model.RecipeModel
 import io.mockk.coEvery
@@ -8,6 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -39,13 +41,14 @@ class RecipeRepositoryImplTest {
     }
 
     @Test
-    fun `getRecipes devuelve fallo cuando falla la red`() = runTest {
+    fun `getRecipes traduce un fallo de red a AppError Network y conserva la causa`() = runTest {
         val error = IOException("sin red")
         coEvery { dataSource.getRecipes(any(), any()) } throws error
 
-        val result = repository.getRecipes("Cena", null)
+        val failure = repository.getRecipes("Cena", null).exceptionOrNull()
 
-        assertEquals(error, result.exceptionOrNull())
+        assertTrue(failure is AppError.Network)
+        assertSame(error, failure?.cause)
     }
 
     @Test
