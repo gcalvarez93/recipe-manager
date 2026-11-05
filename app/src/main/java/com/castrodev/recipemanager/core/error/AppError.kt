@@ -12,7 +12,9 @@ sealed class AppError(message: String, cause: Throwable? = null) : Exception(mes
 
     class Network(cause: Throwable? = null) : AppError("Network error", cause)
     class Server(cause: Throwable? = null) : AppError("Server error", cause)
+    class Timeout(cause: Throwable? = null) : AppError("Timeout", cause)
     class Unauthorized(cause: Throwable? = null) : AppError("Unauthorized", cause)
+    class Forbidden(cause: Throwable? = null) : AppError("Forbidden", cause)
     class NotFound(cause: Throwable? = null) : AppError("Not found", cause)
     class TooManyRequests(cause: Throwable? = null) : AppError("Too many requests", cause)
 

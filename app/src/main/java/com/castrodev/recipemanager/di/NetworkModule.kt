@@ -4,6 +4,8 @@ package com.castrodev.recipemanager.di
 import com.castrodev.recipemanager.BuildConfig
 import com.castrodev.recipemanager.core.network.ApiConfig
 import com.castrodev.recipemanager.core.network.AuthInterceptor
+import com.castrodev.recipemanager.core.network.SessionEvents
+import com.castrodev.recipemanager.core.network.TokenAuthenticator
 import com.castrodev.recipemanager.core.network.TokenProvider
 import com.castrodev.recipemanager.features.mealplan.data.datasource.MealPlanApiService
 import com.castrodev.recipemanager.features.profile.data.datasource.ProfileApiService
@@ -24,10 +26,15 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    private const val TIMEOUT_SECONDS = 30L
+
     @Provides
     @Singleton
-    fun provideOkHttpClient(tokenProvider: TokenProvider): OkHttpClient {
-        // El cuerpo de las peticiones solo se registra en debug, y nunca el token.
+    fun provideOkHttpClient(
+        tokenProvider: TokenProvider,
+        sessionEvents: SessionEvents
+    ): OkHttpClient {
+        // Los cuerpos de peticiones y respuestas solo se registran en debug, y nunca el token.
         val logging = HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {
                 HttpLoggingInterceptor.Level.BODY
@@ -39,8 +46,11 @@ object NetworkModule {
         return OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokenProvider))
             .addInterceptor(logging)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            // Ante un 401 renueva el token y reintenta una vez; si no basta, avisa de sesión caducada.
+            .authenticator(TokenAuthenticator(tokenProvider, sessionEvents))
+            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
     }
 

@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import retrofit2.HttpException
 import java.io.IOException
+import java.net.SocketTimeoutException
 
 private const val FIREBASE_INVALID_EMAIL = "ERROR_INVALID_EMAIL"
 
@@ -21,13 +22,16 @@ fun Throwable.toAppError(): AppError = when (this) {
     is AppError -> this
 
     is HttpException -> when (code()) {
-        401, 403 -> AppError.Unauthorized(this)
+        401 -> AppError.Unauthorized(this)
+        403 -> AppError.Forbidden(this)
         404 -> AppError.NotFound(this)
         429 -> AppError.TooManyRequests(this)
         in 500..599 -> AppError.Server(this)
         else -> AppError.Unknown(this)
     }
 
+    // SocketTimeoutException es un IOException: tiene que ir antes para no contarse como "sin red".
+    is SocketTimeoutException -> AppError.Timeout(this)
     is FirebaseNetworkException, is IOException -> AppError.Network(this)
     is FirebaseTooManyRequestsException -> AppError.TooManyRequests(this)
 

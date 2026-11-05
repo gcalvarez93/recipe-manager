@@ -4,6 +4,8 @@ package com.castrodev.recipemanager.features.auth.presentation.viewmodel
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.castrodev.recipemanager.R
+import com.castrodev.recipemanager.core.network.SessionEvents
 import com.castrodev.recipemanager.core.ui.toMessageRes
 import com.castrodev.recipemanager.features.auth.domain.entity.UserEntity
 import com.castrodev.recipemanager.features.auth.domain.usecase.GetCurrentUserUseCase
@@ -12,6 +14,7 @@ import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithGoogleU
 import com.castrodev.recipemanager.features.auth.domain.usecase.LogoutUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.RegisterWithEmailUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -32,7 +35,8 @@ class AuthViewModel @Inject constructor(
     private val registerWithEmail: RegisterWithEmailUseCase,
     private val loginWithGoogle: LoginWithGoogleUseCase,
     private val logout: LogoutUseCase,
-    getCurrentUser: GetCurrentUserUseCase
+    getCurrentUser: GetCurrentUserUseCase,
+    sessionEvents: SessionEvents
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
@@ -40,6 +44,9 @@ class AuthViewModel @Inject constructor(
 
     private val _isAuthenticated = MutableStateFlow(getCurrentUser() != null)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
+
+    /** Avisos de que el servidor ya no acepta la sesión. Los recoge la navegación. */
+    val sessionExpired: Flow<Unit> = sessionEvents.expired
 
     fun signInWithEmail(email: String, password: String) =
         authenticate { loginWithEmail(email, password) }
@@ -67,6 +74,19 @@ class AuthViewModel @Inject constructor(
             _isAuthenticated.value = false
             _authState.value = AuthState.Idle
         }
+    }
+
+    /**
+     * Cierra la sesión cuando el servidor ya no la acepta y deja el motivo para que el login lo
+     * muestre. Devuelve `true` si había una sesión que cerrar: varios avisos seguidos solo
+     * provocan una vuelta al login.
+     */
+    suspend fun onSessionExpired(): Boolean {
+        if (!_isAuthenticated.value) return false
+        logout()
+        _isAuthenticated.value = false
+        _authState.value = AuthState.Error(R.string.error_unauthorized)
+        return true
     }
 
     fun clearError() {

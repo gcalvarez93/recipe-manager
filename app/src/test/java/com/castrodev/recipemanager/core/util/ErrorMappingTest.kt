@@ -36,9 +36,13 @@ class ErrorMappingTest {
     // --- HTTP ------------------------------------------------------------------------------
 
     @Test
-    fun `401 y 403 son sesion no valida`() {
+    fun `401 es sesion no valida`() {
         assertTrue(http(401).toAppError() is AppError.Unauthorized)
-        assertTrue(http(403).toAppError() is AppError.Unauthorized)
+    }
+
+    @Test
+    fun `403 es falta de permiso y no sesion no valida`() {
+        assertTrue(http(403).toAppError() is AppError.Forbidden)
     }
 
     @Test
@@ -68,7 +72,12 @@ class ErrorMappingTest {
     fun `los fallos de IO son de red`() {
         assertTrue(IOException().toAppError() is AppError.Network)
         assertTrue(UnknownHostException().toAppError() is AppError.Network)
-        assertTrue(SocketTimeoutException().toAppError() is AppError.Network)
+    }
+
+    @Test
+    fun `un timeout no se cuenta como falta de red`() {
+        // SocketTimeoutException es un IOException: el orden del mapeo importa.
+        assertTrue(SocketTimeoutException().toAppError() is AppError.Timeout)
     }
 
     @Test
@@ -144,7 +153,9 @@ class ErrorMappingTest {
     fun `cada error tiene su texto localizado`() {
         assertEquals(R.string.error_network, AppError.Network().messageRes())
         assertEquals(R.string.error_server, AppError.Server().messageRes())
+        assertEquals(R.string.error_timeout, AppError.Timeout().messageRes())
         assertEquals(R.string.error_unauthorized, AppError.Unauthorized().messageRes())
+        assertEquals(R.string.error_forbidden, AppError.Forbidden().messageRes())
         assertEquals(R.string.error_not_found, AppError.NotFound().messageRes())
         assertEquals(R.string.error_too_many_requests, AppError.TooManyRequests().messageRes())
         assertEquals(R.string.error_invalid_credentials, AppError.InvalidCredentials().messageRes())

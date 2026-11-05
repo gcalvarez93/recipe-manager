@@ -3,6 +3,7 @@ package com.castrodev.recipemanager.features.auth.presentation.viewmodel
 
 import com.castrodev.recipemanager.R
 import com.castrodev.recipemanager.core.error.AppError
+import com.castrodev.recipemanager.core.network.SessionEvents
 import com.castrodev.recipemanager.core.util.MainDispatcherRule
 import com.castrodev.recipemanager.fakes.FakeAuthRepository
 import com.castrodev.recipemanager.fakes.testUser
@@ -11,9 +12,11 @@ import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithEmailUs
 import com.castrodev.recipemanager.features.auth.domain.usecase.LoginWithGoogleUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.LogoutUseCase
 import com.castrodev.recipemanager.features.auth.domain.usecase.RegisterWithEmailUseCase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -26,10 +29,12 @@ class AuthViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var repository: FakeAuthRepository
+    private lateinit var sessionEvents: SessionEvents
 
     @Before
     fun setUp() {
         repository = FakeAuthRepository()
+        sessionEvents = SessionEvents()
     }
 
     private fun viewModel() = AuthViewModel(
@@ -37,7 +42,8 @@ class AuthViewModelTest {
         registerWithEmail = RegisterWithEmailUseCase(repository),
         loginWithGoogle = LoginWithGoogleUseCase(repository),
         logout = LogoutUseCase(repository),
-        getCurrentUser = GetCurrentUserUseCase(repository)
+        getCurrentUser = GetCurrentUserUseCase(repository),
+        sessionEvents = sessionEvents
     )
 
     @Test
@@ -165,5 +171,47 @@ class AuthViewModelTest {
 
         assertFalse(vm.isAuthenticated.value)
         assertEquals(AuthState.Idle, vm.authState.value)
+    }
+
+    // --- Sesion caducada -------------------------------------------------------------------
+
+    @Test
+    fun `sesion caducada cierra la sesion y deja el motivo para el login`() = runTest {
+        repository.signedInUser = testUser
+        val vm = viewModel()
+
+        val handled = vm.onSessionExpired()
+
+        assertTrue(handled)
+        assertFalse(vm.isAuthenticated.value)
+        assertNull(repository.signedInUser)
+        assertEquals(AuthState.Error(R.string.error_unauthorized), vm.authState.value)
+    }
+
+    @Test
+    fun `sesion caducada sin sesion abierta no hace nada`() = runTest {
+        val vm = viewModel()
+
+        val handled = vm.onSessionExpired()
+
+        assertFalse(handled)
+        assertEquals(AuthState.Idle, vm.authState.value)
+    }
+
+    @Test
+    fun `un segundo aviso de sesion caducada no vuelve a cerrar sesion`() = runTest {
+        repository.signedInUser = testUser
+        val vm = viewModel()
+        vm.onSessionExpired()
+
+        assertFalse(vm.onSessionExpired())
+    }
+
+    @Test
+    fun `el aviso de la capa de red llega al ViewModel`() = runTest {
+        val vm = viewModel()
+        sessionEvents.notifyExpired()
+
+        assertEquals(Unit, vm.sessionExpired.first())
     }
 }

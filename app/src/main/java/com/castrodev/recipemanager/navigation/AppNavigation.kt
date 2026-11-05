@@ -2,6 +2,7 @@
 package com.castrodev.recipemanager.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -19,6 +20,18 @@ fun AppNavigation() {
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
     val startDestination = if (isAuthenticated) Screen.Main.route else Screen.Login.route
+
+    // Si el servidor deja de aceptar la sesión (token revocado o caducado sin posible renovación),
+    // se cierra sesión y se vuelve al login, donde se explica el motivo.
+    LaunchedEffect(Unit) {
+        authViewModel.sessionExpired.collect {
+            if (authViewModel.onSessionExpired()) {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(Screen.Main.route) { inclusive = true }
+                }
+            }
+        }
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Screen.Login.route) {

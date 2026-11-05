@@ -67,6 +67,8 @@
     <!-- Errors shown to the user. Technical detail goes to the log, never to the screen. -->
     <string name="error_network">No internet connection. Check your network and try again.</string>
     <string name="error_server">The server is having problems. Please try again later.</string>
+    <string name="error_timeout">The request took too long. Check your connection and try again.</string>
+    <string name="error_forbidden">You do not have permission to do this.</string>
     <string name="error_unauthorized">Your session is no longer valid. Please sign in again.</string>
     <string name="error_not_found">We could not find what you were looking for.</string>
     <string name="error_too_many_requests">Too many attempts. Please wait a moment and try again.</string>

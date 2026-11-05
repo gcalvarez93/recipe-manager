@@ -11,7 +11,9 @@ import com.castrodev.recipemanager.core.util.toAppError
 fun AppError.messageRes(): Int = when (this) {
     is AppError.Network -> R.string.error_network
     is AppError.Server -> R.string.error_server
+    is AppError.Timeout -> R.string.error_timeout
     is AppError.Unauthorized -> R.string.error_unauthorized
+    is AppError.Forbidden -> R.string.error_forbidden
     is AppError.NotFound -> R.string.error_not_found
     is AppError.TooManyRequests -> R.string.error_too_many_requests
     is AppError.InvalidCredentials -> R.string.error_invalid_credentials
