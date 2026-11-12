@@ -119,11 +119,11 @@ Feature/
 
 Deliberate technical debt, documented rather than hidden:
 
-- **No UI tests.** Snackbars, dialogs and sheets are covered by manual checks only; the automated tests stop at the ViewModels.
-- **Missing ViewModel tests.** The meal plan, shopping list and profile ViewModels have no tests; the auth and recipes ones do.
-- **Two `AuthViewModel` instances.** `AppNavigation` and `MainScreen` each get their own, and only the navigation one collects the session-expired notice. It works because that is the one that signs the user out, but a single shared instance would be clearer.
-- **Display name on sign-up.** If saving the name fails right after the account is created, the failure is only logged: the account exists, so the registration is not reported as failed (retrying would say «email already in use»), but the name is not stored in Firebase and the user is not told.
-- **Thin use cases.** Most use cases only forward the call to the repository. They keep the rule uniform, but for trivial operations they add classes without adding logic.
+- **Lists are reloaded through the `Loading` state.** After a successful create, edit or delete the list is reloaded and, while it loads, replaced by a spinner. If that reload fails, the `Error` state replaces the list even though the write succeeded. A failed write on its own does keep the list, as described above.
+- **No retry button on load errors.** The full-screen error state only shows the message.
+- **Release builds are not minified.** `isMinifyEnabled` is off, so R8 does not shrink or obfuscate the release build.
+- **Test coverage.** Use cases, the recipes and auth ViewModels, the recipes repository, `safeCall`, the error mapping and the network pieces are covered. The meal plan, shopping and profile ViewModels, and the repositories other than recipes, have no tests, and there are no automated UI tests (snackbars, dialogs and sheets are checked by hand).
+- **Shared code is copied, not shared.** `AppError`, `safeCall`, the error mapping and the network layer also exist in workout-tracker; there is no shared module, so a fix has to be applied in both.
 
 ### Other projects in this portfolio
 
@@ -254,11 +254,11 @@ App Android de gestión de recetas y planificación de comidas desarrollada como
 
 Deuda técnica asumida a propósito, documentada en lugar de ocultada:
 
-- **Sin tests de UI.** Los snackbars, diálogos y hojas se comprueban solo a mano; los tests automáticos llegan hasta los ViewModels.
-- **Faltan tests de ViewModels.** Los de plan semanal, lista de la compra y perfil no tienen tests; los de auth y recetas sí.
-- **Dos instancias de `AuthViewModel`.** `AppNavigation` y `MainScreen` obtienen cada una la suya, y solo la de navegación recoge el aviso de sesión caducada. Funciona porque es la que cierra la sesión, pero una única instancia compartida sería más clara.
-- **Nombre al registrarse.** Si guardar el nombre falla justo después de crear la cuenta, el fallo solo se registra en el log: la cuenta ya existe, así que el registro no se da por fallido (reintentar diría «correo ya en uso»), pero el nombre no se guarda en Firebase y no se avisa al usuario.
-- **Casos de uso finos.** La mayoría solo reenvían la llamada al repositorio. Mantienen la regla uniforme, pero en operaciones triviales añaden clases sin añadir lógica.
+- **Las listas se recargan con el estado `Loading`.** Tras crear, editar o borrar con éxito se recarga la lista y, mientras carga, se sustituye por un indicador de carga. Si esa recarga falla, el estado `Error` reemplaza la lista aunque la escritura haya salido bien. Una escritura fallida por sí sola sí conserva la lista, como se describe arriba.
+- **Sin botón de reintento en los errores de carga.** El estado de error a pantalla completa solo muestra el mensaje.
+- **Las builds de release no están minificadas.** `isMinifyEnabled` está desactivado, así que R8 no reduce ni ofusca la build de release.
+- **Cobertura de tests.** Están cubiertos los casos de uso, los ViewModels de recetas y auth, el repositorio de recetas, `safeCall`, el mapeo de errores y las piezas de red. Los ViewModels de plan semanal, compra y perfil, y los repositorios distintos del de recetas, no tienen tests, y no hay tests de UI automáticos (los snackbars, diálogos y hojas se comprueban a mano).
+- **Código compartido copiado, no compartido.** `AppError`, `safeCall`, el mapeo de errores y la capa de red existen también en workout-tracker; no hay un módulo común, así que una corrección hay que aplicarla en los dos.
 
 ### Otros proyectos del portfolio
 
