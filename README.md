@@ -115,6 +115,16 @@ Feature/
 - **Shared .NET 10 API.** Business rules live on the server and the app only talks to it with the user's Firebase token. One backend serves every app in this portfolio.
 - **Tests with fakes and MockK.** Use cases, the recipes repository, the auth and recipes ViewModels, `safeCall`, the error mapping, the auth interceptor and the 401 authenticator are covered with in-memory fakes of the domain interfaces. MockK is used where the collaborator is a concrete class (the remote data source) and to stand in for Firebase exceptions, whose constructors do not run in JVM tests. Snackbars, dialogs and sheets are not covered by UI tests.
 
+### Known limitations
+
+Deliberate technical debt, documented rather than hidden:
+
+- **No UI tests.** Snackbars, dialogs and sheets are covered by manual checks only; the automated tests stop at the ViewModels.
+- **Missing ViewModel tests.** The meal plan, shopping list and profile ViewModels have no tests; the auth and recipes ones do.
+- **Two `AuthViewModel` instances.** `AppNavigation` and `MainScreen` each get their own, and only the navigation one collects the session-expired notice. It works because that is the one that signs the user out, but a single shared instance would be clearer.
+- **Display name on sign-up.** If saving the name fails right after the account is created, the failure is only logged: the account exists, so the registration is not reported as failed (retrying would say «email already in use»), but the name is not stored in Firebase and the user is not told.
+- **Thin use cases.** Most use cases only forward the call to the repository. They keep the rule uniform, but for trivial operations they add classes without adding logic.
+
 ### Other projects in this portfolio
 
 | Project | Platform | Language |
@@ -239,6 +249,16 @@ App Android de gestión de recetas y planificación de comidas desarrollada como
 - **Casos de uso por operación.** La mayoría solo delegan en el repositorio; login, registro y crear/editar receta validan los datos (valores sin espacios sobrantes y errores de validación tipados) antes de llamarlo.
 - **API compartida en .NET 10.** Las reglas de negocio viven en el servidor y la app solo habla con él usando el token de Firebase del usuario. Un solo backend sirve a todas las apps de este portfolio.
 - **Tests con fakes y MockK.** Casos de uso, el repositorio de recetas, los ViewModels de auth y recetas, `safeCall`, el mapeo de errores, el interceptor de auth y el autenticador de 401 están cubiertos con fakes en memoria de las interfaces del dominio. MockK se usa donde el colaborador es una clase concreta (el datasource remoto) y para simular las excepciones de Firebase, cuyos constructores no se ejecutan en tests de JVM. Los snackbars, diálogos y hojas no tienen tests de UI.
+
+### Limitaciones conocidas
+
+Deuda técnica asumida a propósito, documentada en lugar de ocultada:
+
+- **Sin tests de UI.** Los snackbars, diálogos y hojas se comprueban solo a mano; los tests automáticos llegan hasta los ViewModels.
+- **Faltan tests de ViewModels.** Los de plan semanal, lista de la compra y perfil no tienen tests; los de auth y recetas sí.
+- **Dos instancias de `AuthViewModel`.** `AppNavigation` y `MainScreen` obtienen cada una la suya, y solo la de navegación recoge el aviso de sesión caducada. Funciona porque es la que cierra la sesión, pero una única instancia compartida sería más clara.
+- **Nombre al registrarse.** Si guardar el nombre falla justo después de crear la cuenta, el fallo solo se registra en el log: la cuenta ya existe, así que el registro no se da por fallido (reintentar diría «correo ya en uso»), pero el nombre no se guarda en Firebase y no se avisa al usuario.
+- **Casos de uso finos.** La mayoría solo reenvían la llamada al repositorio. Mantienen la regla uniforme, pero en operaciones triviales añaden clases sin añadir lógica.
 
 ### Otros proyectos del portfolio
 
