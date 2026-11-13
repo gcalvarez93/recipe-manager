@@ -15,6 +15,7 @@ import com.castrodev.recipemanager.features.recipes.domain.usecase.SearchExterna
 import com.castrodev.recipemanager.features.recipes.domain.usecase.ToggleFavoriteUseCase
 import com.castrodev.recipemanager.features.recipes.domain.usecase.UpdateRecipeUseCase
 import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -116,6 +117,7 @@ class RecipeViewModelTest {
         assertEquals(R.string.error_network, vm.actionError.value)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `recargar con recetas en pantalla no pasa por el estado de carga`() = runTest {
         repository.recipesResult = Result.success(listOf(testRecipe()))
