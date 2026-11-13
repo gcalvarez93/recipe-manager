@@ -77,16 +77,31 @@ class RecipeViewModel @Inject constructor(
 
     init { loadRecipes() }
 
+    /**
+     * Carga la lista. Si ya hay recetas en pantalla, la recarga se hace en segundo plano: no se
+     * sustituye la lista por el indicador de carga y, si falla, se avisa por [actionError] y se
+     * conserva lo que ya se veía. Solo cuando no hay datos se pasa por [RecipesState.Loading] y
+     * [RecipesState.Error] (pantalla de error con botón de reintento).
+     */
     fun loadRecipes() {
         // Si hay una carga en curso se descarta: gana siempre la última petición.
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
-            _recipesState.value = RecipesState.Loading
+            if (!hasLoadedRecipes()) _recipesState.value = RecipesState.Loading
             getRecipes(selectedCategory, if (favoritesOnly) true else null)
                 .onSuccess { _recipesState.value = RecipesState.Success(it) }
-                .onFailure { _recipesState.value = RecipesState.Error(it.toMessageRes()) }
+                .onFailure {
+                    if (hasLoadedRecipes()) {
+                        _actionError.value = it.toMessageRes()
+                    } else {
+                        _recipesState.value = RecipesState.Error(it.toMessageRes())
+                    }
+                }
         }
     }
+
+    private fun hasLoadedRecipes(): Boolean =
+        (_recipesState.value as? RecipesState.Success)?.recipes?.isNotEmpty() == true
 
     fun loadRecipeById(id: String) {
         viewModelScope.launch {

@@ -34,6 +34,7 @@
     <string name="save">Guardar</string>
     <string name="delete">Eliminar</string>
     <string name="cancel">Cancelar</string>
+    <string name="retry">Reintentar</string>
     <string name="no_recipes">Aún no tienes recetas</string>
     <string name="delete_recipe">Eliminar receta</string>
     <string name="delete_recipe_confirm">¿Estás seguro de que quieres eliminar esta receta?</string>

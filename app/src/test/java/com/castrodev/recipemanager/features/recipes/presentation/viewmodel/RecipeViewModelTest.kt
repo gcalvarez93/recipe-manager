@@ -15,6 +15,9 @@ import com.castrodev.recipemanager.features.recipes.domain.usecase.SearchExterna
 import com.castrodev.recipemanager.features.recipes.domain.usecase.ToggleFavoriteUseCase
 import com.castrodev.recipemanager.features.recipes.domain.usecase.UpdateRecipeUseCase
 import io.mockk.mockk
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -87,6 +90,56 @@ class RecipeViewModelTest {
         vm.loadRecipes()
 
         assertEquals(true, repository.lastFavoritesOnly)
+    }
+
+    @Test
+    fun `si la carga inicial falla y se reintenta con exito se muestra la lista`() = runTest {
+        repository.recipesResult = Result.failure(IOException())
+        val vm = viewModel()
+        assertEquals(RecipesState.Error(R.string.error_network), vm.recipesState.value)
+
+        repository.recipesResult = Result.success(listOf(testRecipe()))
+        vm.loadRecipes()
+
+        assertEquals(RecipesState.Success(listOf(testRecipe())), vm.recipesState.value)
+    }
+
+    @Test
+    fun `si recargar falla con recetas en pantalla las conserva y avisa`() = runTest {
+        repository.recipesResult = Result.success(listOf(testRecipe()))
+        val vm = viewModel()
+
+        repository.recipesResult = Result.failure(IOException())
+        vm.loadRecipes()
+
+        assertEquals(RecipesState.Success(listOf(testRecipe())), vm.recipesState.value)
+        assertEquals(R.string.error_network, vm.actionError.value)
+    }
+
+    @Test
+    fun `recargar con recetas en pantalla no pasa por el estado de carga`() = runTest {
+        repository.recipesResult = Result.success(listOf(testRecipe()))
+        val vm = viewModel()
+        val states = mutableListOf<RecipesState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            vm.recipesState.toList(states)
+        }
+
+        vm.loadRecipes()
+
+        assertTrue(states.none { it is RecipesState.Loading })
+    }
+
+    @Test
+    fun `si recargar falla con la lista vacia muestra la pantalla de error`() = runTest {
+        repository.recipesResult = Result.success(emptyList())
+        val vm = viewModel()
+
+        repository.recipesResult = Result.failure(IOException())
+        vm.loadRecipes()
+
+        assertEquals(RecipesState.Error(R.string.error_network), vm.recipesState.value)
+        assertNull(vm.actionError.value)
     }
 
     // --- Favoritos -------------------------------------------------------------------------

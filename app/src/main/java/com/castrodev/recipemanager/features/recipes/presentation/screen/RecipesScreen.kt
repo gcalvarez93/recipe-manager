@@ -70,7 +70,14 @@ fun RecipesScreen(
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val s = state) {
                 is RecipesState.Loading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                is RecipesState.Error   -> Text(stringResource(s.messageRes), modifier = Modifier.align(Alignment.Center))
+                is RecipesState.Error   -> Column(
+                    modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(stringResource(s.messageRes))
+                    Button(onClick = { viewModel.loadRecipes() }) { Text(stringResource(R.string.retry)) }
+                }
                 is RecipesState.Success -> {
                     if (s.recipes.isEmpty()) {
                         Text(stringResource(R.string.no_recipes), modifier = Modifier.align(Alignment.Center))
